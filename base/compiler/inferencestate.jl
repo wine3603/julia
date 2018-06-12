@@ -67,15 +67,15 @@ mutable struct InferenceState
         s_argtypes = VarTable(undef, nslots)
 
         if !src.inferred
-            src.slottypes = Vector{Any}(undef, nslots)
-            for i in 1:nslots
-                at = (i > nargs) ? Bottom : argtypes[i]
-                s_argtypes[i] = VarState(at, i > nargs)
-                src.slottypes[i] = at
-            end
-            s_types[1] = s_argtypes
+          src.slottypes = Vector{Any}(undef, nslots)
+          for i in 1:nslots
+              at = (i > nargs) ? Bottom : argtypes[i]
+              s_argtypes[i] = VarState(at, i > nargs)
+              src.slottypes[i] = at
+          end
+          s_types[1] = s_argtypes
         else
-            s_types = map(_ -> [], s_types)
+          s_types = Any[[] for _ in s_types]
         end
 
         ssavalue_uses = find_ssavalue_uses(code, nssavalues)
