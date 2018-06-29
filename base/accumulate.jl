@@ -225,11 +225,12 @@ function accumulate(op, A; dims::Integer)
 end
 
 """
-    accumulate(op, x::AbstractVector)
+    accumulate(op, x::AbstractVector; [init])
 
 Cumulative operation `op` on a vector. See also
 [`accumulate!`](@ref) to use a preallocated output array, both for performance and
-to control the precision of the output (e.g. to avoid overflow). For common operations
+to control the precision of the output (e.g. to avoid overflow). You may optionally provide
+an initial starting value via the keyword argument `init`. For common operations
 there are specialized variants of `accumulate`, see:
 [`cumsum`](@ref), [`cumprod`](@ref)
 
@@ -246,9 +247,33 @@ julia> accumulate(*, [1,2,3])
  1
  2
  6
+
+julia> accumulate(+, [1,2,3]; init=100)
+3-element Array{Int64,1}:
+ 101
+ 103
+ 106
+
+julia> accumulate(min, [1,2,-1]; init=0)
+3-element Array{Int64,1}:
+  0
+  0
+ -1
 ```
 """
-accumulate(op, x::AbstractVector) = accumulate(op, x, dims=1)
+function accumulate(op, x::AbstractVector; kw...)
+    nt = kw.data
+    if nt isa NamedTuple{()}
+        accumulate(op, x, dims=1)
+    elseif nt isa NamedTuple{(:init,)}
+        v0 = nt.init
+        T = promote_op(op, typeof(v0), eltype(x))
+        out = similar(x, T)
+        accumulate!(op, out, v0, x)
+    else
+        throw(ArgumentError("acccumulate does not support the keyword arguments $(keys(nt))"))
+    end
+end
 
 """
     accumulate!(op, B, A; dims::Integer)
@@ -305,9 +330,10 @@ function accumulate!(op, B, A; dims::Integer)
 end
 
 """
-    accumulate!(op, y, x::AbstractVector)
+    accumulate!(op, y, x::AbstractVector; [init])
 
 Cumulative operation `op` on a vector `x`, storing the result in `y`.
+You may optionally provide an initial starting value via the keyword argument `init`.
 See also [`accumulate`](@ref).
 
 # Examples
@@ -327,10 +353,19 @@ julia> y
  6
 ```
 """
-function accumulate!(op::Op, y, x::AbstractVector) where Op
-    isempty(x) && return y
-    v1 = first(x)
-    _accumulate1!(op, y, v1, x, 1)
+function accumulate!(op::Op, y, x::AbstractVector; kw...) where Op
+    nt = kw.data
+    if nt isa NamedTuple{()}
+        isempty(x) && return y
+        v1 = first(x)
+        _accumulate1!(op, y, v1, x, 1)
+    elseif nt isa NamedTuple{(:init,)}
+        isempty(x) && return y
+        v1 = op(nt.init, first(x))
+        _accumulate1!(op, y, v1, x, 1)
+    else
+        throw(ArgumentError("acccumulate! does not support the keyword arguments $(keys(nt))"))
+    end
 end
 
 @noinline function _accumulate!(op, B, A, R1, ind, R2)
@@ -344,39 +379,6 @@ end
         B[I, i, J] = op(B[I, i-1, J], A[I, i, J])
     end
     B
-end
-
-"""
-    accumulate(op, v0, x::AbstractVector)
-
-Like `accumulate`, but using a starting element `v0`. The first entry of the result will be
-`op(v0, first(A))`.
-
-# Examples
-```jldoctest
-julia> accumulate(+, 100, [1,2,3])
-3-element Array{Int64,1}:
- 101
- 103
- 106
-
-julia> accumulate(min, 0, [1,2,-1])
-3-element Array{Int64,1}:
-  0
-  0
- -1
-```
-"""
-function accumulate(op, v0, x::AbstractVector)
-    T = promote_op(op, typeof(v0), eltype(x))
-    out = similar(x, T)
-    accumulate!(op, out, v0, x)
-end
-
-function accumulate!(op, y, v0, x::AbstractVector)
-    isempty(x) && return y
-    v1 = op(v0, first(x))
-    _accumulate1!(op, y, v1, x, 1)
 end
 
 function _accumulate1!(op, B, v1, A::AbstractVector, dim::Integer)

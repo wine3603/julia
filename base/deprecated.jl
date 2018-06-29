@@ -1723,6 +1723,10 @@ end
 @deprecate mapfoldl(f, op, v0, itr) mapfoldl(f, op, itr; init=v0)
 @deprecate mapfoldr(f, op, v0, itr) mapfoldr(f, op, itr; init=v0)
 
+# PR #27859
+@deprecate accumulate(op, v0, x::AbstractVector) accumulate(op, x; init=v0)
+@deprecate accumulate!(op, y, v0, x::AbstractVector) accumulate!(op, y, x; init=v0)
+
 # END 0.7 deprecations
 
 # BEGIN 1.0 deprecations
