@@ -82,37 +82,4 @@ julia> findnz(A)
 ([1, 1, 3, 2], [1, 2, 2, 3], [1, 2, 4, 3])
 ```
 """
-function findnz(A::AbstractMatrix{T}) where T
-    nnzA = count(t -> t != 0, A)
-    I = zeros(Int, nnzA)
-    J = zeros(Int, nnzA)
-    NZs = Vector{T}(undef, nnzA)
-    cnt = 1
-    if nnzA > 0
-        for j=axes(A,2), i=axes(A,1)
-            Aij = A[i,j]
-            if Aij != 0
-                I[cnt] = i
-                J[cnt] = j
-                NZs[cnt] = Aij
-                cnt += 1
-            end
-        end
-    end
-    return (I, J, NZs)
-end
-
-function findnz(B::BitMatrix)
-    nnzB = count(B)
-    I = Vector{Int}(undef, nnzB)
-    J = Vector{Int}(undef, nnzB)
-    cnt = 1
-    for j = 1:size(B,2), i = 1:size(B,1)
-        if B[i,j]
-            I[cnt] = i
-            J[cnt] = j
-            cnt += 1
-        end
-    end
-    return I, J, trues(length(I))
-end
+function findnz end
