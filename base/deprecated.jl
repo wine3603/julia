@@ -1442,6 +1442,9 @@ end
 @deprecate digits(n, base, pad) digits(n, base = base, pad = pad)
 @deprecate digits(T, n, base, pad) digits(T, n, base = base, pad = pad)
 
+#27908
+@deprecate ndigits(n, base=10, pad=1) ndigits(n, base=base, pad=pad)
+
 @deprecate print_with_color(color, args...; kwargs...) printstyled(args...; kwargs..., color=color)
 
 @deprecate base(b, n)      string(n, base = b)
