@@ -293,6 +293,7 @@ temp_pkg_dir() do project_path; cd(project_path) do
             pkg"dev SubModule2"
             pkg"add Random"
             pkg"add Example"
+            pkg"add JSON"
             pkg"build"
             @eval using BigProject
             pkg"build BigProject"
@@ -327,7 +328,9 @@ temp_pkg_dir() do project_path
             setup_package(parent_dir, pkg_name) = begin
                 mkdir(parent_dir)
                 cd(parent_dir) do
-                    Pkg.generate(pkg_name)
+                    withenv("USER" => "Test User") do
+                        Pkg.generate(pkg_name)
+                    end
                     cd(pkg_name) do
                         repo = LibGit2.init(joinpath(project_path, parent_dir, pkg_name))
                         LibGit2.add!(repo, "*")
